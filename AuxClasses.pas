@@ -151,6 +151,7 @@ type
     Function LowIndex: Integer; virtual; abstract;
     Function HighIndex: Integer; virtual; abstract;
     Function CheckIndex(Index: Integer): Boolean; virtual;
+    procedure CopyGrowSettings(Source: TCustomListObject); virtual;
     property GrowMode: TGrowMode read fGrowMode write fGrowMode;
     property GrowFactor: Double read fGrowFactor write fGrowFactor;
     property GrowLimit: Integer read fGrowLimit write fGrowLimit;
@@ -339,6 +340,18 @@ end;
 Function TCustomListObject.CheckIndex(Index: Integer): Boolean;
 begin
 Result := (Index >= LowIndex) and (Index <= HighIndex);
+end;
+
+//------------------------------------------------------------------------------
+
+procedure TCustomListObject.CopyGrowSettings(Source: TCustomListObject);
+begin
+fGrowMode := Source.GrowMode;
+fGrowFactor := Source.GrowFactor;
+fGrowLimit := Source.GrowLimit;
+fShrinkMode := Source.ShrinkMode;
+fShrinkFactor := Source.ShrinkFactor;
+fShrinkLimit := Source.ShrinkLimit;
 end;
 
 end.
