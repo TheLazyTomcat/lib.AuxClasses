@@ -79,6 +79,7 @@ type
     fUserIntData: PtrInt;
     fUserPtrData: Pointer;
   public
+    constructor Create;
     property UserIntData: PtrInt read fUserIntData write fUserIntData;
     property UserPtrData: Pointer read fUserPtrData write fUserPtrData;
     property UserData: PtrInt read fUserIntData write fUserIntData;
@@ -164,6 +165,27 @@ implementation
 
 uses
   SysUtils;
+
+{===============================================================================
+--------------------------------------------------------------------------------
+                                 TCustomObject
+--------------------------------------------------------------------------------
+===============================================================================}
+
+{===============================================================================
+    TCustomObject - class implementation
+===============================================================================}
+
+{-------------------------------------------------------------------------------
+    TCustomObject - public methods
+-------------------------------------------------------------------------------}
+
+constructor TCustomObject.Create;
+begin
+inherited;
+fUserIntData := 0;
+fUserPtrData := nil;
+end;
 
 {===============================================================================
 --------------------------------------------------------------------------------
