@@ -144,6 +144,7 @@ type
     Function GetCapacity: Integer; virtual; abstract;
     procedure SetCapacity(Value: Integer); virtual; abstract;
     Function GetCount: Integer; virtual; abstract;
+    procedure SetCount(Value: Integer); virtual; abstract;
     procedure Grow; virtual;
     procedure Shrink; virtual;
   public
@@ -159,7 +160,7 @@ type
     property ShrinkFactor: Double read fShrinkFactor write fShrinkFactor;
     property ShrinkLimit: Integer read fShrinkLimit write fShrinkLimit;
     property Capacity: Integer read GetCapacity write SetCapacity;
-    property Count: Integer read GetCount;
+    property Count: Integer read GetCount write SetCount;
   end;
 
 implementation
