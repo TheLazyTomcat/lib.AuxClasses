@@ -128,7 +128,7 @@ type
 {
   Implements methods for advanced parametrized growing and shrinking of any
   list and a few more.
-  Expects derived class to property implement capacity and count properties and
+  Expects derived class to properly implement capacity and count properties and
   LowIndex and HighIndex functions.
 }
   TCustomListObject = class(TCustomObject)
