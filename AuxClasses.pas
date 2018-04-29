@@ -287,7 +287,7 @@ begin
 If Capacity > 0 then
   case fShrinkMode of
     smNormal:
-      If (Capacity > fShrinkLimit) and ((Count * 2) < Trunc(Capacity * fShrinkFactor)) then
+      If (Capacity > fShrinkLimit) and ((Count * 2) < Integer(Trunc(Capacity * fShrinkFactor))) then
         Capacity := Trunc(Capacity * fShrinkFactor);
     smToCount:
       Capacity := Count;
