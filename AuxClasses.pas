@@ -119,8 +119,20 @@ type
                                TCustomListObject
 --------------------------------------------------------------------------------
 ===============================================================================}
-
+{
+  gmSlow            - grow by 1
+  gmLinear          - grow by GrowFactor (integer part of the float)
+  gmFast            - grow by capacity * GrowFactor
+  gmFastAttenuated  - if capacity is below GrowLimit, grow by capacity * GrowFactor
+                      if capacity is above or equal to GrowLimit, grow by 1/16 * GrowLimit
+}
   TGrowMode = (gmSlow, gmLinear, gmFast, gmFastAttenuated);
+{
+  smKeepCap - list is not shrinked, capacity is preserved
+  smNormal  - if capacity is above ShrinkLimit AND count is below (capacity * ShrinkFactor) / 2
+              then capacity is set to capacity * ShrinkFactor, otherwise capacity is preserved
+  smToCount - capacity is set to count
+}
   TShrinkMode = (smKeepCap, smNormal, smToCount);
 
 {===============================================================================
@@ -145,7 +157,7 @@ type
     procedure SetCapacity(Value: Integer); virtual; abstract;
     Function GetCount: Integer; virtual; abstract;
     procedure SetCount(Value: Integer); virtual; abstract;
-    procedure Grow; virtual;
+    procedure Grow(MinDelta: Integer = 1); virtual;
     procedure Shrink; virtual;
   public
     constructor Create;
@@ -274,33 +286,34 @@ const
     TCustomListObject - protected methods
 -------------------------------------------------------------------------------}
 
-procedure TCustomListObject.Grow;
+procedure TCustomListObject.Grow(MinDelta: Integer = 1);
 var
-  NewCapacity:  Integer;
+  Delta:  Integer;
 begin
 If Count >= Capacity then
   begin
     If Capacity = 0 then
-      NewCapacity := CAPACITY_GROW_INIT
+      Delta := CAPACITY_GROW_INIT
     else
       case fGrowMode of
         gmLinear:
-          NewCapacity := Capacity + Trunc(fGrowFactor);
+          Delta := Trunc(fGrowFactor);
         gmFast:
-          NewCapacity := Trunc(Capacity * fGrowFactor);
+          Delta := Trunc(Capacity * fGrowFactor);
         gmFastAttenuated:
           If Capacity >= fGrowLimit then
-            NewCapacity := Capacity + (fGrowLimit shr 4)
+            Delta := fGrowLimit shr 4
           else
-            NewCapacity := Trunc(Capacity * fGrowFactor);
+            Delta := Trunc(Capacity * fGrowFactor);
       else
        {gmSlow}
-       NewCapacity := Capacity + 1;
+       Delta := 1;
       end;
-    If NewCapacity <= Capacity then
-      raise Exception.Create('TCustomListObject.Grow: Cannot grow.')
-    else
-      Capacity := NewCapacity;
+    If Delta < MinDelta then
+      Delta := MinDelta
+    else If Delta <= 0 then
+      Delta := 1;
+    Capacity := Capacity + Delta;;
   end;
 end;
 
@@ -311,7 +324,7 @@ begin
 If Capacity > 0 then
   case fShrinkMode of
     smNormal:
-      If (Capacity > fShrinkLimit) and ((Count * 2) < Integer(Trunc(Capacity * fShrinkFactor))) then
+      If (Capacity > fShrinkLimit) and (Count < Integer(Trunc((Capacity * fShrinkFactor) / 2))) then
         Capacity := Trunc(Capacity * fShrinkFactor);
     smToCount:
       Capacity := Count;
@@ -329,7 +342,7 @@ constructor TCustomListObject.Create;
 begin
 inherited;
 fGrowMode := gmFast;
-fGrowFactor := 2.0;
+fGrowFactor := 1.0;
 fGrowLimit := 128 * 1024 * 1024;
 fShrinkMode := smNormal;
 fShrinkFactor := 0.5;
