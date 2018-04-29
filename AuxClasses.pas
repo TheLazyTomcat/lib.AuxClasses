@@ -24,7 +24,7 @@ unit AuxClasses;
 {$ELSEIF defined(CPU386)}
   {$DEFINE x86}
 {$ELSE}
-  {$DEFINE PurePascal}
+  {$MESSAGE FATAL 'Unsupported CPU'}
 {$IFEND}
 
 {$IF Defined(WINDOWS) or Defined(MSWINDOWS)}
