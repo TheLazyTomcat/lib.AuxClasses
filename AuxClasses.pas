@@ -313,7 +313,7 @@ If Count >= Capacity then
       Delta := MinDelta
     else If Delta <= 0 then
       Delta := 1;
-    Capacity := Capacity + Delta;;
+    Capacity := Capacity + Delta;
   end;
 end;
 
