@@ -24,7 +24,7 @@ unit AuxClasses;
 {$ELSEIF defined(CPU386)}
   {$DEFINE x86}
 {$ELSE}
-  {$MESSAGE FATAL 'Unsupported CPU'}
+  {$DEFINE PurePascal}
 {$IFEND}
 
 {$IF Defined(WINDOWS) or Defined(MSWINDOWS)}
@@ -33,8 +33,7 @@ unit AuxClasses;
 
 {$IFDEF FPC}
   {$MODE ObjFPC}{$H+}
-  {$ASMMODE Intel} 
-  {$DEFINE FPC_DisableWarns}
+  {$ASMMODE Intel}
 {$ENDIF}
 
 {$TYPEINFO ON}
@@ -178,7 +177,9 @@ type
 implementation
 
 uses
-  SysUtils;
+  {$IF not Defined(FPC) and Defined(Windows) and Defined(PurePascal)}
+    Windows,
+  {$IFEND} SysUtils;
 
 {===============================================================================
 --------------------------------------------------------------------------------
@@ -211,6 +212,7 @@ end;
     TCustomRefCountedObject - auxiliary functions
 ===============================================================================}
 
+{$IFNDEF PurePascal}
 Function InterlockedExchangeAdd(var A: Int32; B: Int32): Int32; register; assembler;
 asm
 {$IFDEF x64}
@@ -228,6 +230,7 @@ asm
   LOCK  XADD  dword ptr [EDX], EAX
 {$ENDIF}
 end;
+{$ENDIF}
 
 {===============================================================================
     TCustomRefCountedObject - class implementation
