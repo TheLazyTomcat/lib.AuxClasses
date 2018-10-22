@@ -36,8 +36,6 @@ unit AuxClasses;
   {$ASMMODE Intel}
 {$ENDIF}
 
-{$TYPEINFO ON}
-
 interface
 
 uses
