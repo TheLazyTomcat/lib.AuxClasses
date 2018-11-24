@@ -50,14 +50,14 @@ type
   TNotifyEvent is declared in classes, but if including entire classes unit
   into the project is not desirable, this declaration can be used instead.
 }
-  TNotifyEvent    = procedure(Sended: TObject) of object;
-  TNotifyCallback = procedure(Sended: TObject);
+  TNotifyEvent    = procedure(Sender: TObject) of object;
+  TNotifyCallback = procedure(Sender: TObject);
 
-  TIntegerEvent    = procedure(Sended: TObject; Value: Integer) of object;
-  TIntegerCallback = procedure(Sended: TObject; Value: Integer);
+  TIntegerEvent    = procedure(Sender: TObject; Value: Integer) of object;
+  TIntegerCallback = procedure(Sender: TObject; Value: Integer);
 
-  TFloatEvent    = procedure(Sended: TObject; Value: Double) of object;
-  TFloatCallback = procedure(Sended: TObject; Value: Double);
+  TFloatEvent    = procedure(Sender: TObject; Value: Double) of object;
+  TFloatCallback = procedure(Sender: TObject; Value: Double);
 
 {===============================================================================
 --------------------------------------------------------------------------------
