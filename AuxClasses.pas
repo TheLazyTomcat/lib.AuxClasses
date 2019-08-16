@@ -9,12 +9,23 @@
 
   Auxiliary classes and classes-related material
 
-  ©František Milt 2018-12-23
+  Version 1.0.2
 
-  Version 1.0.1
+  Last changed 2019-08-16
+
+  ©2018-2019 František Milt
+
+  Contacts:
+    František Milt: frantisek.milt@gmail.com
+
+  Support:
+    If you find this code useful, please consider supporting its author(s) by
+    making a small donation using the following link(s):
+
+      https://www.paypal.me/FMilt
 
   Dependencies:
-    AuxTypes - github.com/ncs-sniper/Lib.AuxTypes
+    AuxTypes - github.com/TheLazyTomcat/Lib.AuxTypes
 
 ===============================================================================}
 unit AuxClasses;
@@ -46,6 +57,8 @@ uses
 ===============================================================================}
 
 type
+  TPlainEvent    = procedure of object;
+  TPlainCallback = procedure;
 {
   TNotifyEvent is declared in classes, but if including entire classes unit
   into the project is not desirable, this declaration can be used instead.
@@ -55,6 +68,9 @@ type
 
   TIntegerEvent    = procedure(Sender: TObject; Value: Integer) of object;
   TIntegerCallback = procedure(Sender: TObject; Value: Integer);
+
+  TIndexEvent    = procedure(Sender: TObject; Index: Integer) of object;
+  TIndexCallback = procedure(Sender: TObject; Index: Integer);
 
   TFloatEvent    = procedure(Sender: TObject; Value: Double) of object;
   TFloatCallback = procedure(Sender: TObject; Value: Double);
@@ -71,6 +87,9 @@ type
   TObjectEvent    = procedure(Sender: TObject; Obj: TObject) of object;
   TObjectCallback = procedure(Sender: TObject; Obj: TObject);
 
+  TOpenEvent    = procedure(Sender: TObject; Values: array of const) of object;
+  TOpenCallback = procedure(Sender: TObject; Values: array of const); 
+
 {===============================================================================
 --------------------------------------------------------------------------------
                                  TCustomObject
@@ -80,8 +99,8 @@ type
     TCustomObject - class declaration
 ===============================================================================}
 {
-  Normal object only with added fields/properties that can be used by user
-  for any purpose.
+  Normal object only with added fields/properties that can be used by user for
+  any purpose, and also some functions.
 }
   TCustomObject = class(TObject)
   private
@@ -89,6 +108,7 @@ type
     fUserPtrData: Pointer;
   public
     constructor Create;
+    Function InstanceString: String; virtual;
     property UserIntData: PtrInt read fUserIntData write fUserIntData;
     property UserPtrData: Pointer read fUserPtrData write fUserPtrData;
     property UserData: PtrInt read fUserIntData write fUserIntData;
@@ -150,8 +170,8 @@ type
 {
   Implements methods for advanced parametrized growing and shrinking of any
   list and a few more.
-  Expects derived class to properly implement capacity and count properties and
-  LowIndex and HighIndex functions.
+  Expects derived class to properly implement capacity and count properties
+  (both getters and setters) and LowIndex and HighIndex functions.
 }
   TCustomListObject = class(TCustomObject)
   private
@@ -210,6 +230,13 @@ begin
 inherited;
 fUserIntData := 0;
 fUserPtrData := nil;
+end;
+
+//------------------------------------------------------------------------------
+
+Function TCustomObject.InstanceString: String;
+begin
+Result := Format('%s(%p)',[Self.ClassName,Pointer(Self)]);
 end;
 
 {===============================================================================
