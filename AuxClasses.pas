@@ -9,9 +9,9 @@
 
   Auxiliary classes and classes-related material
 
-  Version 1.0.2
+  Version 1.0.2 (2019-08-19)
 
-  Last changed 2019-08-16
+  Last change 2019-08-19
 
   ©2018-2019 František Milt
 
@@ -23,6 +23,11 @@
     making a small donation using the following link(s):
 
       https://www.paypal.me/FMilt
+
+  Changelog:
+    For detailed changelog and history please refer to this git repository:
+
+      github.com/TheLazyTomcat/Lib.AuxClasses
 
   Dependencies:
     AuxTypes - github.com/TheLazyTomcat/Lib.AuxTypes
