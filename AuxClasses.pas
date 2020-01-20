@@ -9,11 +9,11 @@
 
   Auxiliary classes and classes-related material
 
-  Version 1.0.2 (2019-08-19)
+  Version 1.0.3 (2020-01-20)
 
-  Last change 2019-08-19
+  Last change 2020-01-20
 
-  ©2018-2019 František Milt
+  ©2018-2020 František Milt
 
   Contacts:
     František Milt: frantisek.milt@gmail.com
@@ -45,6 +45,10 @@ unit AuxClasses;
 
 {$IF Defined(WINDOWS) or Defined(MSWINDOWS)}
   {$DEFINE Windows}
+{$ELSEIF Defined(LINUX) and Defined(FPC)}
+  {$DEFINE Linux}
+{$ELSE}
+  {$MESSAGE FATAL 'Unsupported operating system.'}
 {$IFEND}
 
 {$IFDEF FPC}
