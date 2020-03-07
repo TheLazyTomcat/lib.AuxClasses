@@ -11,7 +11,7 @@
 
   Version 1.0.4 (2020-03-06)
 
-  Last change 2020-03-06
+  Last change 2020-03-07
 
   ©2018-2020 František Milt
 
@@ -35,6 +35,18 @@
 ===============================================================================}
 unit AuxClasses;
 
+{
+  AuxClasses_PurePascal
+
+  If you want to compile this unit without ASM, don't want to or cannot define
+  PurePascal for the entire project and at the same time you don't want to or
+  cannot make changes to this unit, define this symbol for the entire project
+  and this unit will be compiled in PurePascal mode.
+}
+{$IFDEF AuxClasses_PurePascal}
+  {$DEFINE PurePascal}
+{$ENDIF}
+
 {$IF defined(CPUX86_64) or defined(CPUX64)}
   {$DEFINE x64}
 {$ELSEIF defined(CPU386)}
@@ -54,18 +66,6 @@ unit AuxClasses;
 {$IFDEF FPC}
   {$MODE ObjFPC}{$H+}
   {$ASMMODE Intel}
-{$ENDIF}
-
-{
-  AuxClasses_PurePascal
-
-  If you want to compile this unit without ASM, don't want to or cannot define
-  PurePascal for the entire project and at the same time you don't want to or
-  cannot make changes to this unit, define this symbol for the entire project
-  and this unit will be compiled in PurePascal mode.
-}
-{$IFDEF AuxClasses_PurePascal}
-  {$DEFINE PurePascal}
 {$ENDIF}
 
 interface
