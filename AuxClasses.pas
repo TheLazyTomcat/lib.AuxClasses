@@ -7,11 +7,11 @@
 -------------------------------------------------------------------------------}
 {===============================================================================
 
-  Auxiliary classes and classes-related material
+  Auxiliary classes and other class-related things
 
-  Version 1.0.4 (2020-03-06)
+  Version 1.1 (2020-04-06)
 
-  Last change 2020-03-07
+  Last change 2020-04-06
 
   ©2018-2020 František Milt
 
@@ -71,6 +71,7 @@ unit AuxClasses;
 interface
 
 uses
+  SysUtils,
   AuxTypes;
 
 {===============================================================================
@@ -109,7 +110,18 @@ type
   TObjectCallback = procedure(Sender: TObject; Obj: TObject);
 
   TOpenEvent    = procedure(Sender: TObject; Values: array of const) of object;
-  TOpenCallback = procedure(Sender: TObject; Values: array of const); 
+  TOpenCallback = procedure(Sender: TObject; Values: array of const);
+
+{===============================================================================
+    Some unit-specific exceptions
+===============================================================================}
+
+type
+  EACException = class(Exception);
+
+  EACIndexOutOfBounds  = class(EACException);
+  EACInvalidValue      = class(EACException);
+  EACIncompatibleClass = class(EACException);
 
 {===============================================================================
 --------------------------------------------------------------------------------
@@ -123,6 +135,7 @@ type
   Normal object only with added fields/properties that can be used by user for
   any purpose, and also some functions.
 }
+type
   TCustomObject = class(TObject)
   private
     fUserIntData: PtrInt;
@@ -151,6 +164,7 @@ type
   is automatically freed inside of function Release when reference counter upon
   entry to this function is 1 (ie. it reaches 0 in this call).
 }
+type
   TCustomRefCountedObject = class(TCustomObject)
   private
     fRefCount:      Int32;
@@ -169,6 +183,8 @@ type
                                TCustomListObject
 --------------------------------------------------------------------------------
 ===============================================================================}
+
+type
 {
   gmSlow            - grow by 1
   gmLinear          - grow by GrowFactor (integer part of the float)
@@ -185,6 +201,31 @@ type
 }
   TShrinkMode = (smKeepCap, smNormal, smToCount);
 
+{
+  Structure used to store grow settings in one place.
+}
+  TListGrowSettings = record
+    GrowMode:      TGrowMode;
+    GrowFactor:    Double;
+    GrowLimit:     Integer;
+    ShrinkMode:    TShrinkMode;
+    ShrinkFactor:  Double;
+    ShrinkLimit:   Integer;
+  end;
+  PListGrowSettings = ^TListGrowSettings;
+
+const
+{
+  Default list grow/shrink settings.
+}
+  AC_LIST_GROW_SETTINGS_DEF: TListGrowSettings = (
+    GrowMode:      gmFast;
+    GrowFactor:    1.0;
+    GrowLimit:     128 * 1024 * 1024;
+    ShrinkMode:    smNormal;
+    ShrinkFactor:  0.5;
+    ShrinkLimit:   256);
+
 {===============================================================================
     TCustomListObject - class declaration
 ===============================================================================}
@@ -194,14 +235,10 @@ type
   Expects derived class to properly implement capacity and count properties
   (both getters and setters) and LowIndex and HighIndex functions.
 }
+type
   TCustomListObject = class(TCustomObject)
   private
-    fGrowMode:      TGrowMode;
-    fGrowFactor:    Double;
-    fGrowLimit:     Integer;
-    fShrinkMode:    TShrinkMode;
-    fShrinkFactor:  Double;
-    fShrinkLimit:   Integer;
+    fListGrowSettings:  TListGrowSettings;
   protected
     Function GetCapacity: Integer; virtual; abstract;
     procedure SetCapacity(Value: Integer); virtual; abstract;
@@ -215,33 +252,76 @@ type
     Function HighIndex: Integer; virtual; abstract;
     Function CheckIndex(Index: Integer): Boolean; virtual;
     procedure CopyGrowSettings(Source: TCustomListObject); virtual;
-    property GrowMode: TGrowMode read fGrowMode write fGrowMode;
-    property GrowFactor: Double read fGrowFactor write fGrowFactor;
-    property GrowLimit: Integer read fGrowLimit write fGrowLimit;
-    property ShrinkMode: TShrinkMode read fShrinkMode write fShrinkMode;
-    property ShrinkFactor: Double read fShrinkFactor write fShrinkFactor;
-    property ShrinkLimit: Integer read fShrinkLimit write fShrinkLimit;
+    property ListGrowSettings: TListGrowSettings read fListGrowSettings write fListGrowSettings;
+    property GrowMode: TGrowMode read fListGrowSettings.GrowMode write fListGrowSettings.GrowMode;
+    property GrowFactor: Double read fListGrowSettings.GrowFactor write fListGrowSettings.GrowFactor;
+    property GrowLimit: Integer read fListGrowSettings.GrowLimit write fListGrowSettings.GrowLimit;
+    property ShrinkMode: TShrinkMode read fListGrowSettings.ShrinkMode write fListGrowSettings.ShrinkMode;
+    property ShrinkFactor: Double read fListGrowSettings.ShrinkFactor write fListGrowSettings.ShrinkFactor;
+    property ShrinkLimit: Integer read fListGrowSettings.ShrinkLimit write fListGrowSettings.ShrinkLimit;
     property Capacity: Integer read GetCapacity write SetCapacity;
     property Count: Integer read GetCount write SetCount;
   end;
 
+{===============================================================================
+--------------------------------------------------------------------------------
+                             TCustomMultiListObject
+--------------------------------------------------------------------------------
+===============================================================================}
+{===============================================================================
+    TCustomMultiListObject - class declaration
+===============================================================================}
+{
+  Very similar to TCustomListObject, but this class can support multiple
+  separate lists that are distinguished by index (integer).
+}
+type
+  TCustomMultiListObject = class(TCustomObject)
+  private
+    fListGrowSettings:  array of TListGrowSettings;
+    Function GetListCount: Integer; virtual;
+    Function GetListGrowSettings(List: Integer): TListGrowSettings; virtual;
+    procedure SetListGrowSettings(List: Integer; Value: TListGrowSettings); virtual;
+    Function GetListGrowSettingsPtr(List: Integer): PListGrowSettings; virtual;
+  protected
+    Function GetCapacity(List: Integer): Integer; virtual; abstract;
+    procedure SetCapacity(List,Value: Integer); virtual; abstract;
+    Function GetCount(List: Integer): Integer; virtual; abstract;
+    procedure SetCount(List,Value: Integer); virtual; abstract;
+    procedure Grow(List: Integer; MinDelta: Integer = 1); virtual;
+    procedure Shrink(List: Integer); virtual;
+  public
+    constructor Create(ListCount: Integer);
+    destructor Destroy; override;
+    Function LowList: Integer; virtual;
+    Function HighList: Integer; virtual;
+    Function LowIndex(List: Integer): Integer; virtual; abstract;
+    Function HighIndex(List: Integer): Integer; virtual; abstract;
+    Function CheckList(List: Integer): Boolean; virtual;
+    Function CheckIndex(List,Index: Integer): Boolean; virtual;
+    procedure CopyGrowSettings(Source: TCustomMultiListObject); virtual;
+    property ListCount: Integer read GetListCount;
+    property ListGrowSettings[List: Integer]: TListGrowSettings read GetListGrowSettings write SetListGrowSettings;
+    property ListGrowSettingsPtrs[List: Integer]: PListGrowSettings read GetListGrowSettingsPtr;
+    property Capacity[List: Integer]: Integer read GetCapacity write SetCapacity;
+    property Count[List: Integer]: Integer read GetCount write SetCount;
+  end;
+
 implementation
 
+{$IF not Defined(FPC) and Defined(Windows) and Defined(PurePascal)}
 uses
-  {$IF not Defined(FPC) and Defined(Windows) and Defined(PurePascal)}
-    Windows,
-  {$IFEND} SysUtils;
+  Windows;
+{$IFEND}
 
 {===============================================================================
 --------------------------------------------------------------------------------
                                  TCustomObject
 --------------------------------------------------------------------------------
 ===============================================================================}
-
 {===============================================================================
     TCustomObject - class implementation
 ===============================================================================}
-
 {-------------------------------------------------------------------------------
     TCustomObject - public methods
 -------------------------------------------------------------------------------}
@@ -265,7 +345,6 @@ end;
                             TCustomRefCountedObject
 --------------------------------------------------------------------------------
 ===============================================================================}
-
 {===============================================================================
     TCustomRefCountedObject - auxiliary functions
 ===============================================================================}
@@ -293,7 +372,6 @@ end;
 {===============================================================================
     TCustomRefCountedObject - class implementation
 ===============================================================================}
-
 {-------------------------------------------------------------------------------
     TCustomRefCountedObject - private methods
 -------------------------------------------------------------------------------}
@@ -342,7 +420,6 @@ const
 {===============================================================================
     TCustomListObject - class implementation
 ===============================================================================}
-
 {-------------------------------------------------------------------------------
     TCustomListObject - protected methods
 -------------------------------------------------------------------------------}
@@ -356,16 +433,16 @@ If Count >= Capacity then
     If Capacity = 0 then
       Delta := CAPACITY_GROW_INIT
     else
-      case fGrowMode of
+      case fListGrowSettings.GrowMode of
         gmLinear:
-          Delta := Trunc(fGrowFactor);
+          Delta := Trunc(fListGrowSettings.GrowFactor);
         gmFast:
-          Delta := Trunc(Capacity * fGrowFactor);
+          Delta := Trunc(Capacity * fListGrowSettings.GrowFactor);
         gmFastAttenuated:
-          If Capacity >= fGrowLimit then
-            Delta := fGrowLimit shr 4
+          If Capacity >= fListGrowSettings.GrowLimit then
+            Delta := fListGrowSettings.GrowLimit shr 4
           else
-            Delta := Trunc(Capacity * fGrowFactor);
+            Delta := Trunc(Capacity * fListGrowSettings.GrowFactor);
       else
        {gmSlow}
        Delta := 1;
@@ -383,10 +460,11 @@ end;
 procedure TCustomListObject.Shrink;
 begin
 If Capacity > 0 then
-  case fShrinkMode of
+  case fListGrowSettings.ShrinkMode of
     smNormal:
-      If (Capacity > fShrinkLimit) and (Count < Integer(Trunc((Capacity * fShrinkFactor) / 2))) then
-        Capacity := Trunc(Capacity * fShrinkFactor);
+      If (Capacity > fListGrowSettings.ShrinkLimit) and
+        (Count < Integer(Trunc((Capacity * fListGrowSettings.ShrinkFactor) / 2))) then
+        Capacity := Trunc(Capacity * fListGrowSettings.ShrinkFactor);
     smToCount:
       Capacity := Count;
   else
@@ -402,12 +480,7 @@ end;
 constructor TCustomListObject.Create;
 begin
 inherited;
-fGrowMode := gmFast;
-fGrowFactor := 1.0;
-fGrowLimit := 128 * 1024 * 1024;
-fShrinkMode := smNormal;
-fShrinkFactor := 0.5;
-fShrinkLimit := 256;
+fListGrowSettings := AC_LIST_GROW_SETTINGS_DEF;
 end;
 
 //------------------------------------------------------------------------------
@@ -421,12 +494,183 @@ end;
 
 procedure TCustomListObject.CopyGrowSettings(Source: TCustomListObject);
 begin
-fGrowMode := Source.GrowMode;
-fGrowFactor := Source.GrowFactor;
-fGrowLimit := Source.GrowLimit;
-fShrinkMode := Source.ShrinkMode;
-fShrinkFactor := Source.ShrinkFactor;
-fShrinkLimit := Source.ShrinkLimit;
+fListGrowSettings := Source.ListGrowSettings;
+end;
+
+{===============================================================================
+--------------------------------------------------------------------------------
+                             TCustomMultiListObject
+--------------------------------------------------------------------------------
+===============================================================================}
+{===============================================================================
+    TCustomMultiListObject - class implementation
+===============================================================================}
+{-------------------------------------------------------------------------------
+    TCustomMultiListObject - private methods
+-------------------------------------------------------------------------------}
+
+Function TCustomMultiListObject.GetListCount: Integer;
+begin
+Result := Length(fListGrowSettings);
+end;
+
+//------------------------------------------------------------------------------
+
+Function TCustomMultiListObject.GetListGrowSettings(List: Integer): TListGrowSettings;
+begin
+If CheckList(List) then
+  Result := fListGrowSettings[List]
+else
+  raise EACIndexOutOfBounds.CreateFmt('TCustomMultiListObject.GetListGrowSettings: List index %d out of bounds.',[List]);
+end;
+
+//------------------------------------------------------------------------------
+
+procedure TCustomMultiListObject.SetListGrowSettings(List: Integer; Value: TListGrowSettings);
+begin
+If CheckList(List) then
+  fListGrowSettings[List] := Value
+else
+  raise EACIndexOutOfBounds.CreateFmt('TCustomMultiListObject.SetListGrowSettings: List index %d out of bounds.',[List]);
+end;
+
+//------------------------------------------------------------------------------
+
+Function TCustomMultiListObject.GetListGrowSettingsPtr(List: Integer): PListGrowSettings;
+begin
+If CheckList(List) then
+  Result := Addr(fListGrowSettings[List])
+else
+  raise EACIndexOutOfBounds.CreateFmt('TCustomMultiListObject.GetListGrowSettingsPtr: List index %d out of bounds.',[List]);
+end;
+
+{-------------------------------------------------------------------------------
+    TCustomMultiListObject - protected methods
+-------------------------------------------------------------------------------}
+
+procedure TCustomMultiListObject.Grow(List: Integer; MinDelta: Integer = 1);
+var
+  Delta:  Integer;
+begin
+If CheckList(List) then
+  begin
+    If Count[List] >= Capacity[List] then
+      begin
+        If Capacity[List] = 0 then
+          Delta := CAPACITY_GROW_INIT
+        else
+          case fListGrowSettings[List].GrowMode of
+            gmLinear:
+              Delta := Trunc(fListGrowSettings[List].GrowFactor);
+            gmFast:
+              Delta := Trunc(Capacity[List] * fListGrowSettings[List].GrowFactor);
+            gmFastAttenuated:
+              If Capacity[List] >= fListGrowSettings[List].GrowLimit then
+                Delta := fListGrowSettings[List].GrowLimit shr 4
+              else
+                Delta := Trunc(Capacity[List] * fListGrowSettings[List].GrowFactor);
+          else
+           {gmSlow}
+           Delta := 1;
+          end;
+        If Delta < MinDelta then
+          Delta := MinDelta
+        else If Delta <= 0 then
+          Delta := 1;
+        Capacity[List] := Capacity[List] + Delta;
+      end;
+end
+else EACIndexOutOfBounds.CreateFmt('TCustomMultiListObject.Grow: List index %d out of bounds.',[List]);
+end;
+
+//------------------------------------------------------------------------------
+
+procedure TCustomMultiListObject.Shrink(List: Integer);
+begin
+If CheckList(List) then
+  begin
+    If Capacity[List] > 0 then
+      case fListGrowSettings[List].ShrinkMode of
+        smNormal:
+          If (Capacity[List] > fListGrowSettings[List].ShrinkLimit) and
+            (Count[List] < Integer(Trunc((Capacity[List] * fListGrowSettings[List].ShrinkFactor) / 2))) then
+            Capacity[List] := Trunc(Capacity[List] * fListGrowSettings[List].ShrinkFactor);
+        smToCount:
+          Capacity[List] := Count[List];
+      else
+        {smKeepCap}
+        //do nothing
+      end;
+end
+else EACIndexOutOfBounds.CreateFmt('TCustomMultiListObject.Shrink: List index %d out of bounds.',[List]);
+end;
+
+{-------------------------------------------------------------------------------
+    TCustomMultiListObject - public methods
+-------------------------------------------------------------------------------}
+
+constructor TCustomMultiListObject.Create(ListCount: Integer);
+var
+  i:  Integer;
+begin
+inherited Create;
+If ListCount >= 1 then
+  begin
+    SetLength(fListGrowSettings,ListCount);
+    For i := LowList to HighList do
+      fListGrowSettings[i] := AC_LIST_GROW_SETTINGS_DEF;
+  end
+else raise EACInvalidValue.CreateFmt('TCustomMultiListObject.Create: Invalid list count (%d).',[ListCount]);
+end;
+
+//------------------------------------------------------------------------------
+
+destructor TCustomMultiListObject.Destroy;
+begin
+SetLength(fListGrowSettings,0);
+inherited;
+end;
+
+//------------------------------------------------------------------------------
+
+Function TCustomMultiListObject.LowList: Integer;
+begin
+Result := Low(fListGrowSettings);
+end;
+
+//------------------------------------------------------------------------------
+
+Function TCustomMultiListObject.HighList: Integer;
+begin
+Result := High(fListGrowSettings);
+end;
+
+//------------------------------------------------------------------------------
+
+Function TCustomMultiListObject.CheckList(List: Integer): Boolean;
+begin
+Result := (List >= LowList) and (List <= HighList);
+end;
+
+//------------------------------------------------------------------------------
+
+Function TCustomMultiListObject.CheckIndex(List,Index: Integer): Boolean;
+begin
+Result := (Index >= LowIndex(List)) and (Index <= HighIndex(List));
+end;
+
+//------------------------------------------------------------------------------
+
+procedure TCustomMultiListObject.CopyGrowSettings(Source: TCustomMultiListObject);
+var
+  i:  Integer;
+begin
+If Self.ListCount = Source.ListCount then
+  begin
+    For i := LowList to HighList do
+      fListGrowSettings[i] := AC_LIST_GROW_SETTINGS_DEF;
+  end
+else raise EACIncompatibleClass.CreateFmt('TCustomMultiListObject.CopyGrowSettings: List count mismatch (%d,%d).',[Self.ListCount,Source.ListCount]);
 end;
 
 end.
