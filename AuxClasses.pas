@@ -9,7 +9,7 @@
 
   Auxiliary classes and other class-related things
 
-  Version 1.1,1 (2020-04-07)
+  Version 1.1.1 (2020-04-07)
 
   Last change 2020-04-07
 
