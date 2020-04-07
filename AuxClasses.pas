@@ -9,9 +9,9 @@
 
   Auxiliary classes and other class-related things
 
-  Version 1.1 (2020-04-06)
+  Version 1.1,1 (2020-04-07)
 
-  Last change 2020-04-06
+  Last change 2020-04-07
 
   ©2018-2020 František Milt
 
@@ -120,7 +120,6 @@ type
   EACException = class(Exception);
 
   EACIndexOutOfBounds  = class(EACException);
-  EACInvalidValue      = class(EACException);
   EACIncompatibleClass = class(EACException);
 
 {===============================================================================
@@ -280,6 +279,7 @@ type
   private
     fListGrowSettings:  array of TListGrowSettings;
     Function GetListCount: Integer; virtual;
+    procedure SetListCount(Value: Integer); virtual;
     Function GetListGrowSettings(List: Integer): TListGrowSettings; virtual;
     procedure SetListGrowSettings(List: Integer; Value: TListGrowSettings); virtual;
     Function GetListGrowSettingsPtr(List: Integer): PListGrowSettings; virtual;
@@ -300,7 +300,7 @@ type
     Function CheckList(List: Integer): Boolean; virtual;
     Function CheckIndex(List,Index: Integer): Boolean; virtual;
     procedure CopyGrowSettings(Source: TCustomMultiListObject); virtual;
-    property ListCount: Integer read GetListCount;
+    property ListCount: Integer read GetListCount write SetListCount;
     property ListGrowSettings[List: Integer]: TListGrowSettings read GetListGrowSettings write SetListGrowSettings;
     property ListGrowSettingsPtrs[List: Integer]: PListGrowSettings read GetListGrowSettingsPtr;
     property Capacity[List: Integer]: Integer read GetCapacity write SetCapacity;
@@ -516,6 +516,23 @@ end;
 
 //------------------------------------------------------------------------------
 
+procedure TCustomMultiListObject.SetListCount(Value: Integer);
+var
+  OldCount: Integer;
+  i:        Integer;
+begin
+If (Value <> Length(fListGrowSettings)) and (Value >= 0) then
+  begin
+    OldCount := Length(fListGrowSettings);
+    SetLength(fListGrowSettings,Value);
+    If Value > OldCount then
+      For i := OldCount to High(fListGrowSettings) do
+       fListGrowSettings[i] := AC_LIST_GROW_SETTINGS_DEF;
+  end;
+end;
+
+//------------------------------------------------------------------------------
+
 Function TCustomMultiListObject.GetListGrowSettings(List: Integer): TListGrowSettings;
 begin
 If CheckList(List) then
@@ -610,17 +627,9 @@ end;
 -------------------------------------------------------------------------------}
 
 constructor TCustomMultiListObject.Create(ListCount: Integer);
-var
-  i:  Integer;
 begin
 inherited Create;
-If ListCount >= 1 then
-  begin
-    SetLength(fListGrowSettings,ListCount);
-    For i := LowList to HighList do
-      fListGrowSettings[i] := AC_LIST_GROW_SETTINGS_DEF;
-  end
-else raise EACInvalidValue.CreateFmt('TCustomMultiListObject.Create: Invalid list count (%d).',[ListCount]);
+SetListCount(ListCount)
 end;
 
 //------------------------------------------------------------------------------
