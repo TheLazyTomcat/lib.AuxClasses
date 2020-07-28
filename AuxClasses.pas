@@ -9,9 +9,9 @@
 
   Auxiliary classes and other class-related things
 
-  Version 1.1.1 (2020-04-07)
+  Version 1.1.2 (2020-07-29)
 
-  Last change 2020-04-07
+  Last change 2020-07-29
 
   ©2018-2020 František Milt
 
@@ -132,13 +132,22 @@ type
 ===============================================================================}
 {
   Normal object only with added fields/properties that can be used by user for
-  any purpose, and also some functions.
+  any purpose, and also some methods.
 }
 type
   TCustomObject = class(TObject)
   private
     fUserIntData: PtrInt;
     fUserPtrData: Pointer;
+  protected
+    procedure RaiseError(ExceptionClass: ExceptClass; const Method,Msg: String; const Args: array of const); overload; virtual;
+    procedure RaiseError(ExceptionClass: ExceptClass; const Method,Msg: String); overload; virtual;
+    procedure RaiseError(const Method,Msg: String; const Args: array of const); overload; virtual;
+    procedure RaiseError(const Method,Msg: String); overload; virtual;
+    procedure RaiseError(ExceptionClass: ExceptClass; const Msg: String; const Args: array of const); overload; virtual;
+    procedure RaiseError(ExceptionClass: ExceptClass; const Msg: String); overload; virtual;
+    procedure RaiseError(const Msg: String; const Args: array of const); overload; virtual;
+    procedure RaiseError(const Msg: String); overload; virtual;
   public
     constructor Create;
     Function InstanceString: String; virtual;
@@ -322,6 +331,65 @@ uses
 {===============================================================================
     TCustomObject - class implementation
 ===============================================================================}
+{-------------------------------------------------------------------------------
+    TCustomObject - protected methods
+-------------------------------------------------------------------------------}
+
+procedure TCustomObject.RaiseError(ExceptionClass: ExceptClass; const Method,Msg: String; const Args: array of const);
+begin
+raise ExceptionClass.CreateFmt(Format('%s.%s: %s',[InstanceString,Method,Msg]),Args);
+end;
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+procedure TCustomObject.RaiseError(ExceptionClass: ExceptClass; const Method,Msg: String);
+begin
+RaiseError(ExceptionClass,Method,Msg,[]);
+end;
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+procedure TCustomObject.RaiseError(const Method,Msg: String; const Args: array of const);
+begin
+RaiseError(Exception,Method,Msg,Args);
+end;
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+procedure TCustomObject.RaiseError(const Method,Msg: String);
+begin
+RaiseError(Exception,Method,Msg,[]);
+end;
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+procedure TCustomObject.RaiseError(ExceptionClass: ExceptClass; const Msg: String; const Args: array of const);
+begin
+raise ExceptionClass.CreateFmt(Format('%s: %s',[InstanceString,Msg]),Args);
+end;
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+procedure TCustomObject.RaiseError(ExceptionClass: ExceptClass; const Msg: String);
+begin
+RaiseError(ExceptionClass,Msg,[]);
+end;
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+procedure TCustomObject.RaiseError(const Msg: String; const Args: array of const);
+begin
+RaiseError(Exception,Msg,Args);
+end;
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+procedure TCustomObject.RaiseError(const Msg: String);
+begin
+RaiseError(Exception,Msg,[]);
+end;
+
 {-------------------------------------------------------------------------------
     TCustomObject - public methods
 -------------------------------------------------------------------------------}
