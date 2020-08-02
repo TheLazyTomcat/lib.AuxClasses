@@ -11,7 +11,7 @@
 
   Version 1.1.2 (2020-07-29)
 
-  Last change 2020-07-29
+  Last change 2020-08-02
 
   ©2018-2020 František Milt
 
@@ -64,9 +64,10 @@ unit AuxClasses;
 {$IFEND}
 
 {$IFDEF FPC}
-  {$MODE ObjFPC}{$H+}
+  {$MODE ObjFPC}
   {$ASMMODE Intel}
 {$ENDIF}
+{$H+}
 
 interface
 
