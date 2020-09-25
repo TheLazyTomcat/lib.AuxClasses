@@ -9,9 +9,9 @@
 
   Auxiliary classes and other class-related things
 
-  Version 1.1.2 (2020-07-29)
+  Version 1.1.3 (2020-09-25)
 
-  Last change 2020-08-02
+  Last change 2020-09-25
 
   ©2018-2020 František Milt
 
@@ -112,6 +112,12 @@ type
 
   TOpenEvent    = procedure(Sender: TObject; Values: array of const) of object;
   TOpenCallback = procedure(Sender: TObject; Values: array of const);
+
+{===============================================================================
+    Functions
+===============================================================================}
+
+Function GetInstanceString(Instance: TObject): String;
 
 {===============================================================================
     Some unit-specific exceptions
@@ -325,6 +331,18 @@ uses
 {$IFEND}
 
 {===============================================================================
+    Functions
+===============================================================================}
+
+Function GetInstanceString(Instance: TObject): String;
+begin
+If Assigned(Instance) then
+  Result := Format('%s(%p)',[Instance.ClassName,Pointer(Instance)])
+else
+  Result := 'TObject(nil)'; // return some sensible string, not just nothing
+end;
+
+{===============================================================================
 --------------------------------------------------------------------------------
                                  TCustomObject
 --------------------------------------------------------------------------------
@@ -406,7 +424,7 @@ end;
 
 Function TCustomObject.InstanceString: String;
 begin
-Result := Format('%s(%p)',[Self.ClassName,Pointer(Self)]);
+Result := GetInstanceString(Self);
 end;
 
 {===============================================================================
