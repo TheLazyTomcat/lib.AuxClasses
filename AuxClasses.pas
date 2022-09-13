@@ -11,9 +11,9 @@
 
   Version 1.1.3 (2020-09-25)
 
-  Last change 2020-09-25
+  Last change 2022-09-13
 
-  ©2018-2020 František Milt
+  ©2018-2022 František Milt
 
   Contacts:
     František Milt: frantisek.milt@gmail.com
@@ -143,10 +143,9 @@ type
 }
 type
   TCustomObject = class(TObject)
-  private
+  protected
     fUserIntData: PtrInt;
     fUserPtrData: Pointer;
-  protected
     procedure RaiseError(ExceptionClass: ExceptClass; const Method,Msg: String; const Args: array of const); overload; virtual;
     procedure RaiseError(ExceptionClass: ExceptClass; const Method,Msg: String); overload; virtual;
     procedure RaiseError(const Method,Msg: String; const Args: array of const); overload; virtual;
@@ -181,10 +180,10 @@ type
 }
 type
   TCustomRefCountedObject = class(TCustomObject)
-  private
+  protected
     fRefCount:      Int32;
     fFreeOnRelease: Boolean;
-    Function GetRefCount: Int32;
+    Function GetRefCount: Int32; virtual;
   public
     constructor Create;
     Function Acquire: Int32; virtual;
@@ -252,9 +251,8 @@ const
 }
 type
   TCustomListObject = class(TCustomObject)
-  private
-    fListGrowSettings:  TListGrowSettings;
   protected
+    fListGrowSettings:  TListGrowSettings;
     Function GetCapacity: Integer; virtual; abstract;
     procedure SetCapacity(Value: Integer); virtual; abstract;
     Function GetCount: Integer; virtual; abstract;
@@ -292,14 +290,13 @@ type
 }
 type
   TCustomMultiListObject = class(TCustomObject)
-  private
+  protected
     fListGrowSettings:  array of TListGrowSettings;
     Function GetListCount: Integer; virtual;
     procedure SetListCount(Value: Integer); virtual;
     Function GetListGrowSettings(List: Integer): TListGrowSettings; virtual;
     procedure SetListGrowSettings(List: Integer; Value: TListGrowSettings); virtual;
     Function GetListGrowSettingsPtr(List: Integer): PListGrowSettings; virtual;
-  protected
     Function GetCapacity(List: Integer): Integer; virtual; abstract;
     procedure SetCapacity(List,Value: Integer); virtual; abstract;
     Function GetCount(List: Integer): Integer; virtual; abstract;
@@ -460,7 +457,7 @@ end;
     TCustomRefCountedObject - class implementation
 ===============================================================================}
 {-------------------------------------------------------------------------------
-    TCustomRefCountedObject - private methods
+    TCustomRefCountedObject - protected methods
 -------------------------------------------------------------------------------}
 
 Function TCustomRefCountedObject.GetRefCount: Int32;
@@ -468,9 +465,7 @@ begin
 Result := InterlockedExchangeAdd(fRefCount,0);
 end;
 
-{-------------------------------------------------------------------------------
-    TCustomRefCountedObject - public methods
--------------------------------------------------------------------------------}
+//-----------------------------------------------------------------------------
 
 constructor TCustomRefCountedObject.Create;
 begin
@@ -593,7 +588,7 @@ end;
     TCustomMultiListObject - class implementation
 ===============================================================================}
 {-------------------------------------------------------------------------------
-    TCustomMultiListObject - private methods
+    TCustomMultiListObject - protected methods
 -------------------------------------------------------------------------------}
 
 Function TCustomMultiListObject.GetListCount: Integer;
@@ -648,9 +643,7 @@ else
   raise EACIndexOutOfBounds.CreateFmt('TCustomMultiListObject.GetListGrowSettingsPtr: List index %d out of bounds.',[List]);
 end;
 
-{-------------------------------------------------------------------------------
-    TCustomMultiListObject - protected methods
--------------------------------------------------------------------------------}
+//------------------------------------------------------------------------------
 
 procedure TCustomMultiListObject.Grow(List: Integer; MinDelta: Integer = 1);
 var
