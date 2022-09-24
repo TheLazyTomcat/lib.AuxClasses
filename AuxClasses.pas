@@ -11,7 +11,7 @@
 
   Version 1.1.3 (2020-09-25)
 
-  Last change 2022-09-13
+  Last change 2022-09-24
 
   ©2018-2022 František Milt
 
@@ -34,7 +34,6 @@
 
 ===============================================================================}
 unit AuxClasses;
-
 {
   AuxClasses_PurePascal
 
@@ -57,10 +56,6 @@ unit AuxClasses;
 
 {$IF Defined(WINDOWS) or Defined(MSWINDOWS)}
   {$DEFINE Windows}
-{$ELSEIF Defined(LINUX) and Defined(FPC)}
-  {$DEFINE Linux}
-{$ELSE}
-  {$MESSAGE FATAL 'Unsupported operating system.'}
 {$IFEND}
 
 {$IFDEF FPC}
